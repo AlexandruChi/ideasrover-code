@@ -1,5 +1,7 @@
 {
     "files.associations": {
-        "camera.h": "c"
+        "camera.h": "c",
+        "cameradata.h": "c",
+        "socket.h": "c"
     }
 }
