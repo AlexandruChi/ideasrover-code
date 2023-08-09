@@ -5,7 +5,7 @@
 
 #include "camera.h"
 
-#define CAMERA_SOCKET_PATH "cameasocket"
+#define CAMERA_SOCKET_PATH "camerasocket"
 #define GET_CAMERA_DATA_COMMAND "getdata"
 
 // TODO add errors
