@@ -13,4 +13,7 @@ struct InputThread {
     size_t dataSize;
 };
 
+struct InputThread *createInputThread(const char *socketPath, size_t dataSize);
+void destroyInputThread(struct InputThread *inputThread);
+void copyInputThreadData(struct InputThread *inputThread, void *dest);
 #endif

@@ -79,12 +79,9 @@ void destroyInputThread(struct InputThread *inputThread) {
     inputThread->data = NULL;
 }
 
-void *getInputData(struct InputThread *inputThread) {
-    void *data = malloc(inputThread->dataSize);
-    if (!data) {exit(1);}
+void copyInputThreadData(struct InputThread *inputThread, void *dest) {
     pthread_mutex_lock(&inputThread->mutex);
     pthread_cond_signal(&inputThread->cond);
-    memcpy(data, inputThread->data, inputThread->dataSize);
+    memcpy(dest, inputThread->data, inputThread->dataSize);
     pthread_mutex_unlock(&inputThread->mutex);
-    return data;
 }
