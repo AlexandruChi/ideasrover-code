@@ -9,18 +9,21 @@
 
 // TODO add errors
 
+// input treads continuasly colects data from device
+// when data is recived it is copied drom local memory to shered memory
 void *inputThreadMain(void *arg) {
     struct InputThread *inputThread = (struct InputThread*)arg;
-    char getDataCommand[] = "get";
 
+    // allocate memory
     pthread_mutex_lock(&inputThread->mutex);
-    if (inputThread->running) {
-        pthread_mutex_unlock(&inputThread->mutex);
-        return NULL;
-    }
+    size_t recvDataSize = inputThread->dataSize;
     pthread_mutex_unlock(&inputThread->mutex);
+    void *recvData = malloc(recvDataSize);
+    if (!recvData) {
+        exit(1);
+    }
 
-    // create client socket
+    // create server socket
     int socketfd = socket(AF_LOCAL, SOCK_STREAM, 0);
     struct sockaddr_un sockaddr;
     sockaddr.sun_family = AF_LOCAL;
@@ -39,19 +42,18 @@ void *inputThreadMain(void *arg) {
     // main loop
     for(;;) {
         pthread_mutex_lock(&inputThread->mutex);
-        pthread_cond_wait(&inputThread->cond, &inputThread->mutex);
         if (!inputThread->running) {
             pthread_mutex_unlock(&inputThread->mutex);
             break;
         }
         pthread_mutex_unlock(&inputThread->mutex);
-        send(socketfd, &getDataCommand, sizeof(getDataCommand), 0);
+        recv(socketfd, recvData, recvDataSize, 0);
         pthread_mutex_lock(&inputThread->mutex);
-        recv(socketfd, inputThread->data, inputThread->dataSize, 0);
+        memcpy(inputThread->data, recvData, inputThread->dataSize);
         pthread_mutex_unlock(&inputThread->mutex);
     }
 
-    // close client socket
+    free(recvData);
     close(socketfd);
     return NULL;
 }
@@ -79,7 +81,6 @@ struct InputThread *createInputThread(const char *socketPath, size_t dataSize) {
 void destroyInputThread(struct InputThread *inputThread) {
     pthread_mutex_lock(&inputThread->mutex);
     inputThread->running = 0;
-    pthread_cond_signal(&inputThread->cond);
     pthread_mutex_unlock(&inputThread->mutex);
     pthread_join(inputThread->threadID, NULL);
     pthread_mutex_destroy(&inputThread->mutex);
@@ -95,7 +96,6 @@ void destroyInputThread(struct InputThread *inputThread) {
 // local copy is crated to alow data to be used whyle the input thread receves new data
 void copyInputThreadData(struct InputThread *inputThread, void *dest) {
     pthread_mutex_lock(&inputThread->mutex);
-    pthread_cond_signal(&inputThread->cond);
     memcpy(dest, inputThread->data, inputThread->dataSize);
     pthread_mutex_unlock(&inputThread->mutex);
 }
