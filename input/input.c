@@ -27,7 +27,9 @@ void *inputThreadMain(void *arg) {
     pthread_mutex_lock(&inputThread->mutex);
     strcpy(sockaddr.sun_path, inputThread->socketPath);
     pthread_mutex_unlock(&inputThread->mutex);
-    connect(socketfd, (struct sockaddr*)&(sockaddr), sizeof(sockaddr));
+    bind(socketfd, (struct sockaddr*)&(sockaddr), sizeof(sockaddr));
+    listen(socketfd, 0);
+    accept(socketfd, NULL, NULL);
 
     // main loop
     for(;;) {
