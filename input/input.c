@@ -31,6 +31,11 @@ void *inputThreadMain(void *arg) {
     listen(socketfd, 0);
     accept(socketfd, NULL, NULL);
 
+    // confirm connection to parent thread
+    pthread_mutex_lock(&inputThread->mutex);
+    pthread_cond_signal(&inputThread->cond);
+    pthread_mutex_unlock(&inputThread->mutex);
+
     // main loop
     for(;;) {
         pthread_mutex_lock(&inputThread->mutex);
@@ -51,6 +56,8 @@ void *inputThreadMain(void *arg) {
     return NULL;
 }
 
+// creates and starts the input device thread on socket socketPath
+// dataSize reprezents the maximum size of the data it can revice
 struct InputThread *createInputThread(const char *socketPath, size_t dataSize) {
     struct InputThread *inputThread = (struct InputThread*)malloc(sizeof(struct InputThread));
     if (!inputThread) {exit(1);}
@@ -67,6 +74,8 @@ struct InputThread *createInputThread(const char *socketPath, size_t dataSize) {
     return inputThread;
 }
 
+// sends stop comand to thread and waits for thread to finish
+// dealocates all thread allocated memory
 void destroyInputThread(struct InputThread *inputThread) {
     pthread_mutex_lock(&inputThread->mutex);
     inputThread->running = 0;
@@ -81,6 +90,9 @@ void destroyInputThread(struct InputThread *inputThread) {
     inputThread->data = NULL;
 }
 
+// TODO probably dosn't work
+// copies the data from the thread memory into caller thread memory
+// local copy is crated to alow data to be used whyle the input thread receves new data
 void copyInputThreadData(struct InputThread *inputThread, void *dest) {
     pthread_mutex_lock(&inputThread->mutex);
     pthread_cond_signal(&inputThread->cond);
