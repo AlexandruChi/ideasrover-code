@@ -1,4 +1,4 @@
-#ifndef __camrea_h
+#ifndef __camera_h
 #define __camera_h
 
 struct InputThread {
