@@ -91,7 +91,6 @@ void destroyInputThread(struct InputThread *inputThread) {
     inputThread->data = NULL;
 }
 
-// TODO probably dosn't work
 // copies the data from the thread memory into caller thread memory
 // local copy is crated to alow data to be used whyle the input thread receves new data
 void copyInputThreadData(struct InputThread *inputThread, void *dest) {
