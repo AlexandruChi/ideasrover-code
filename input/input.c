@@ -7,10 +7,24 @@
 
 #include "input.h"
 
+// TODO rename input thread to connection thread
+
+// TODO create fucntions for creating connections
+// TODO create Connection data type
+// TODO create function for creating sockets
+
 // TODO add errors
 
+// TODO fix documetation
+// TODO fix header file
+
+// TODO create python suport
+// TODO create c++ suport
+
+// TODO stop ading TODOs
+
 // input treads continuasly colects data from device
-// when data is recived it is copied drom local memory to shered memory
+// when data is recived it is copied from local memory to shered memory
 void *inputThreadMain(void *arg) {
     struct InputThread *inputThread = (struct InputThread*)arg;
 
@@ -62,15 +76,18 @@ int createInputThreadSocket(const void* socket, _Bool server, _Bool network) {
     
 }
 
-// creates and starts the input device thread on socket socketPath
+// creates and starts the connection thread and socket
 // dataSize reprezents the maximum size of the data it can revice
-struct InputThread *createConnectionThread(const void *socketPath, size_t dataSize, _Bool input, _Bool network, _Bool server) {
+// const void* socket points to file name or host name depending on the type of socket
+// if host name os used for the soket the first 2 bytes reprezent the port (in_port_t)
+struct InputThread *createConnectionThread(const void *socket, size_t dataSize, _Bool input, _Bool network, _Bool server) {
     struct InputThread *inputThread = (struct InputThread*)malloc(sizeof(struct InputThread));
     if (!inputThread) {
         exit(1);
     }
     
     inputThread->running = 1;
+    inputThread->connected = 0;
     inputThread->dataSize = dataSize;
     inputThread->server = server;
     inputThread->network = network;
@@ -83,22 +100,34 @@ struct InputThread *createConnectionThread(const void *socketPath, size_t dataSi
         exit(1);
     }
 
-    ;
-    if (!(inputThread->socket = malloc(strlen(socketPath)))) {
+    size_t socketSize;
+    if (network) {
+        socketSize = sizeof(in_port_t);
+        socketSize += strlen(socket + socketSize);
+    } else {
+        socketSize = strlen(socket);
+    }
+
+    if (!(inputThread->socket = malloc(socketSize))) {
         exit(1);
     }
+
+    memcpy(inputThread->socket, socket, socketSize);
 
     if (!(inputThread->data = malloc(dataSize))) {
         exit(1);
     }
-    strcpy((char*)inputThread->socket, socketPath);
-    if (!pthread_create(&inputThread->threadID, NULL, inputThreadMain, inputThread)) {exit(1);}
+
+    if (!pthread_create(&inputThread->threadID, NULL, inputThreadMain, inputThread)) {
+        exit(1);
+    }
+
     return inputThread;
 }
 
 // sends stop comand to thread and waits for thread to finish
 // dealocates all thread allocated memory
-void destroyInputThread(struct InputThread *inputThread) {
+void destroyConnection(struct InputThread *inputThread) {
     pthread_mutex_lock(&inputThread->mutex);
     inputThread->running = 0;
     pthread_mutex_unlock(&inputThread->mutex);
@@ -115,7 +144,7 @@ void destroyInputThread(struct InputThread *inputThread) {
 
 // copies the data from the thread memory into caller thread memory
 // local copy is crated to alow data to be used whyle the input thread receves new data
-void copyInputThreadData(struct InputThread *inputThread, void *dest) {
+void copyConnectionThreadData(struct InputThread *inputThread, void *dest) {
     pthread_mutex_lock(&inputThread->mutex);
     memcpy(dest, inputThread->data, inputThread->dataSize);
     pthread_mutex_unlock(&inputThread->mutex);

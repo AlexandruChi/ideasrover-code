@@ -2,6 +2,7 @@
     "files.associations": {
         "camera.h": "c",
         "cameradata.h": "c",
-        "socket.h": "c"
+        "socket.h": "c",
+        "un.h": "c"
     }
 }
