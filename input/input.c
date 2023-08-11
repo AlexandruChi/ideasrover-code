@@ -28,7 +28,7 @@ void *inputThreadMain(void *arg) {
     struct sockaddr_un sockaddr;
     sockaddr.sun_family = AF_LOCAL;
     pthread_mutex_lock(&inputThread->mutex);
-    strcpy(sockaddr.sun_path, inputThread->socketPath);
+    strcpy(sockaddr.sun_path, (char*)inputThread->socket);
     pthread_mutex_unlock(&inputThread->mutex);
     bind(socketfd, (struct sockaddr*)&(sockaddr), sizeof(sockaddr));
     listen(socketfd, 0);
@@ -58,20 +58,40 @@ void *inputThreadMain(void *arg) {
     return NULL;
 }
 
+int createInputThreadSocket(const void* socket, _Bool server, _Bool network) {
+    
+}
+
 // creates and starts the input device thread on socket socketPath
 // dataSize reprezents the maximum size of the data it can revice
-struct InputThread *createInputThread(const char *socketPath, size_t dataSize) {
+struct InputThread *createConnectionThread(const void *socketPath, size_t dataSize, _Bool input, _Bool network, _Bool server) {
     struct InputThread *inputThread = (struct InputThread*)malloc(sizeof(struct InputThread));
-    if (!inputThread) {exit(1);}
+    if (!inputThread) {
+        exit(1);
+    }
+    
     inputThread->running = 1;
     inputThread->dataSize = dataSize;
-    if (!pthread_mutex_init(&inputThread->mutex, NULL)) {exit(1);}
-    if (!pthread_cond_init(&inputThread->cond, NULL)) {exit(1);}
-    inputThread->socketPath = (char*)malloc(strlen(socketPath));
-    if (!inputThread->socketPath) {exit(1);}
-    inputThread->data = malloc(dataSize);
-    if (!inputThread->data) {exit(1);}
-    strcpy(inputThread->socketPath, socketPath);
+    inputThread->server = server;
+    inputThread->network = network;
+    inputThread->input = input;
+
+    if (!pthread_mutex_init(&inputThread->mutex, NULL)) {
+        exit(1);
+    }
+    if (!pthread_cond_init(&inputThread->cond, NULL)) {
+        exit(1);
+    }
+
+    ;
+    if (!(inputThread->socket = malloc(strlen(socketPath)))) {
+        exit(1);
+    }
+
+    if (!(inputThread->data = malloc(dataSize))) {
+        exit(1);
+    }
+    strcpy((char*)inputThread->socket, socketPath);
     if (!pthread_create(&inputThread->threadID, NULL, inputThreadMain, inputThread)) {exit(1);}
     return inputThread;
 }
@@ -82,11 +102,13 @@ void destroyInputThread(struct InputThread *inputThread) {
     pthread_mutex_lock(&inputThread->mutex);
     inputThread->running = 0;
     pthread_mutex_unlock(&inputThread->mutex);
+
     pthread_join(inputThread->threadID, NULL);
     pthread_mutex_destroy(&inputThread->mutex);
     pthread_cond_destroy(&inputThread->cond);
-    free(inputThread->socketPath);
-    inputThread->socketPath = NULL;
+    
+    free(inputThread->socket);
+    inputThread->socket = NULL;
     free(inputThread->data);
     inputThread->data = NULL;
 }

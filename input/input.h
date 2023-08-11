@@ -6,16 +6,18 @@ struct InputThread {
     pthread_cond_t cond;
     pthread_mutex_t mutex;
 
-    char *socketPath;
-    _Bool running;
+    _Bool input;
+    _Bool server;
+    _Bool network;
 
+    _Bool running;
+    _Bool connected;
+
+    void *socket;
     void *data;
     size_t dataSize;
 };
 
 // input.c for documentation
 
-struct InputThread *createInputThread(const char *socketPath, size_t dataSize);
-void destroyInputThread(struct InputThread *inputThread);
-void copyInputThreadData(struct InputThread *inputThread, void *dest);
 #endif
