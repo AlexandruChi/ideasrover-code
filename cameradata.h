@@ -5,6 +5,7 @@
 // preferably compatible betwen c and camera program
 // if not data can be procesed in the main or camera program
 // alternativly you can send a string or a json then decode it
+// can also be replace with something diferent
 struct CameraData {
     // camra data goes here
 };
