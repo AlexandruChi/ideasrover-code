@@ -5,6 +5,11 @@
  * 
  * check source code for documentation and 
  * implementation for the threads and sockets
+ * 
+ * library does not implement a queue system
+ * for messeges so only the most recent data is 
+ * continuously recived or send when is avalible 
+ * in the threads memory
  */
 
 #ifndef __communication_h
