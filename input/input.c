@@ -4,10 +4,33 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <unistd.h>
+#include <arpa/inet.h>
 
 #include "input.h"
 
+#ifndef and
+#define and &&
+#endif
+
+#ifndef or
+#define or ||
+#endif
+
+#ifndef false
+#define false NULL
+#endif
+
+#ifndef true
+#define true !false
+#endif
+
+#ifndef loop
+#define loop for(;;)
+#endif
+
 // TODO rename input thread to connection thread
+
+// TODO modify thread to run continously and connect to any avalible devices
 
 // TODO create fucntions for creating connections
 // TODO create Connection data type
@@ -23,10 +46,27 @@
 
 // TODO stop ading TODOs
 
+struct ConnectionThread {
+    pthread_t threadID;
+    pthread_cond_t cond;
+    pthread_mutex_t mutex;
+
+    _Bool input;
+    _Bool server;
+    _Bool network;
+
+    _Bool running;
+    _Bool connected;
+
+    void *socketData;
+    void *data;
+    size_t dataSize;
+};
+
 // input treads continuasly colects data from device
 // when data is recived it is copied from local memory to shered memory
 void *inputThreadMain(void *arg) {
-    struct InputThread *inputThread = (struct InputThread*)arg;
+    struct ConnectionThread *inputThread = (struct ConnectionThread*)arg;
 
     // allocate memory
     pthread_mutex_lock(&inputThread->mutex);
@@ -37,24 +77,28 @@ void *inputThreadMain(void *arg) {
         exit(1);
     }
 
-    // create server socket
-    int socketfd = socket(AF_LOCAL, SOCK_STREAM, 0);
-    struct sockaddr_un sockaddr;
-    sockaddr.sun_family = AF_LOCAL;
-    pthread_mutex_lock(&inputThread->mutex);
-    strcpy(sockaddr.sun_path, (char*)inputThread->socket);
-    pthread_mutex_unlock(&inputThread->mutex);
-    bind(socketfd, (struct sockaddr*)&(sockaddr), sizeof(sockaddr));
-    listen(socketfd, 0);
-    accept(socketfd, NULL, NULL);
+    // // create server socket
+    // int socketfd = socket(AF_LOCAL, SOCK_STREAM, 0);
+    // struct sockaddr_un sockaddr;
+    // sockaddr.sun_family = AF_LOCAL;
+    // pthread_mutex_lock(&inputThread->mutex);
+    // strcpy(sockaddr.sun_path, (char*)inputThread->socketData);
+    // pthread_mutex_unlock(&inputThread->mutex);
+    // bind(socketfd, (struct sockaddr*)&(sockaddr), sizeof(sockaddr));
+    // listen(socketfd, 0);
+    // accept(socketfd, NULL, NULL);
 
-    // confirm connection to parent thread
     pthread_mutex_lock(&inputThread->mutex);
-    pthread_cond_signal(&inputThread->cond);
+    long long sockets = createConnectionThreadSocket(inputThread->socketData, inputThread->server, inputThread->network);
+    inputThread->connected = 1;
     pthread_mutex_unlock(&inputThread->mutex);
+
+    int socketfd, serverfd;
+    memcpy(&socketfd, &sockets, sizeof(int));
+    memcpy(&serverfd, &sockets + sizeof(int), sizeof(int));
 
     // main loop
-    for(;;) {
+    loop {
         pthread_mutex_lock(&inputThread->mutex);
         if (!inputThread->running) {
             pthread_mutex_unlock(&inputThread->mutex);
@@ -69,19 +113,59 @@ void *inputThreadMain(void *arg) {
 
     free(recvData);
     close(socketfd);
+
+    pthread_mutex_lock(&inputThread->mutex);
+    if (inputThread->network) {
+        close(serverfd);
+    }
+    inputThread->connected = 0;
+    pthread_mutex_unlock(&inputThread->mutex);
+
     return NULL;
 }
 
-int createInputThreadSocket(const void* socket, _Bool server, _Bool network) {
+// returns the file descriptor for the client
+// function return a 8 byte number where the first 4 bytes is the file descriptor of the client
+// the last 4 bytes of the number reprezent the server file descriptor
+long long createConnectionThreadSocket(const void* socketData, _Bool server, _Bool network) {
+    long long socketfd = socket((network ? AF_INET : AF_LOCAL), SOCK_STREAM, 0);
     
+    // convert socketData to sockaddr
+    struct sockaddr *socketaddr;
+    if (network) {
+        ((struct sockaddr_in*)socketaddr)->sin_family = AF_INET;
+        if (!strlen(socketData + sizeof(in_port_t)) and server) {
+            ((struct sockaddr_in*)socketaddr)->sin_addr.s_addr = INADDR_ANY;
+        } else {
+            ((struct sockaddr_in*)socketaddr)->sin_addr.s_addr = inet_addr(socketData + sizeof(in_port_t));
+        }
+        ((struct sockaddr_in*)socketaddr)->sin_port = htons(*((in_port_t*)socketData));
+    } else {
+        ((struct sockaddr_un*)socketaddr)->sun_family = AF_LOCAL;
+        strcpy(((struct sockaddr_un*)socketaddr)->sun_path, socketData);
+    }
+
+    if (server) {
+        bind(socketfd, socketaddr, sizeof(*socketaddr));
+        listen(socketfd, 0);
+        memcpy(&socketfd + sizeof(int), &socketfd, sizeof(int));
+        *((int*)&socketfd) = accept(socketfd, NULL, NULL);
+    } else {
+        connect(socketfd, socketaddr, sizeof(*socketaddr));
+    }
+
+    return socketfd;
 }
 
 // creates and starts the connection thread and socket
 // dataSize reprezents the maximum size of the data it can revice
+// suports AF_LOCAL/AF_UNIX (is network is false) and AF_INET (if network is true)
 // const void* socket points to file name or host name depending on the type of socket
 // if host name os used for the soket the first 2 bytes reprezent the port (in_port_t)
-struct InputThread *createConnectionThread(const void *socket, size_t dataSize, _Bool input, _Bool network, _Bool server) {
-    struct InputThread *inputThread = (struct InputThread*)malloc(sizeof(struct InputThread));
+// for server the host is the adress on witch the server listens for connesction
+// to lisne to any connection the host should be set to a empty string
+struct ConnectionThread *createConnectionThread(const void *socketData, size_t dataSize, _Bool input, _Bool network, _Bool server) {
+    struct ConnectionThread *inputThread = (struct ConnectionThread*)malloc(sizeof(struct ConnectionThread));
     if (!inputThread) {
         exit(1);
     }
@@ -103,16 +187,16 @@ struct InputThread *createConnectionThread(const void *socket, size_t dataSize, 
     size_t socketSize;
     if (network) {
         socketSize = sizeof(in_port_t);
-        socketSize += strlen(socket + socketSize);
+        socketSize += strlen(socketData + socketSize);
     } else {
-        socketSize = strlen(socket);
+        socketSize = strlen(socketData);
     }
 
-    if (!(inputThread->socket = malloc(socketSize))) {
+    if (!(inputThread->socketData = malloc(socketSize))) {
         exit(1);
     }
 
-    memcpy(inputThread->socket, socket, socketSize);
+    memcpy(inputThread->socketData, socketData, socketSize);
 
     if (!(inputThread->data = malloc(dataSize))) {
         exit(1);
@@ -127,7 +211,7 @@ struct InputThread *createConnectionThread(const void *socket, size_t dataSize, 
 
 // sends stop comand to thread and waits for thread to finish
 // dealocates all thread allocated memory
-void destroyConnection(struct InputThread *inputThread) {
+void destroyConnection(struct ConnectionThread *inputThread) {
     pthread_mutex_lock(&inputThread->mutex);
     inputThread->running = 0;
     pthread_mutex_unlock(&inputThread->mutex);
@@ -136,15 +220,15 @@ void destroyConnection(struct InputThread *inputThread) {
     pthread_mutex_destroy(&inputThread->mutex);
     pthread_cond_destroy(&inputThread->cond);
     
-    free(inputThread->socket);
-    inputThread->socket = NULL;
+    free(inputThread->socketData);
+    inputThread->socketData = NULL;
     free(inputThread->data);
     inputThread->data = NULL;
 }
 
 // copies the data from the thread memory into caller thread memory
 // local copy is crated to alow data to be used whyle the input thread receves new data
-void copyConnectionThreadData(struct InputThread *inputThread, void *dest) {
+void copyConnectionThreadData(struct ConnectionThread *inputThread, void *dest) {
     pthread_mutex_lock(&inputThread->mutex);
     memcpy(dest, inputThread->data, inputThread->dataSize);
     pthread_mutex_unlock(&inputThread->mutex);
