@@ -79,17 +79,6 @@ void *inputThreadMain(void *arg) {
         exit(1);
     }
 
-    // // create server socket
-    // int socketfd = socket(AF_LOCAL, SOCK_STREAM, 0);
-    // struct sockaddr_un sockaddr;
-    // sockaddr.sun_family = AF_LOCAL;
-    // pthread_mutex_lock(&inputThread->mutex);
-    // strcpy(sockaddr.sun_path, (char*)inputThread->socketData);
-    // pthread_mutex_unlock(&inputThread->mutex);
-    // bind(socketfd, (struct sockaddr*)&(sockaddr), sizeof(sockaddr));
-    // listen(socketfd, 0);
-    // accept(socketfd, NULL, NULL);
-
     pthread_mutex_lock(&inputThread->mutex);
     long long sockets = createConnectionThreadSocket(inputThread->socketData, inputThread->server, inputThread->network);
     inputThread->connected = 1;
@@ -118,7 +107,9 @@ void *inputThreadMain(void *arg) {
 
     pthread_mutex_lock(&inputThread->mutex);
     if (inputThread->network) {
+        pthread_mutex_unlock(&inputThread->mutex);
         close(serverfd);
+        pthread_mutex_lock(&inputThread->mutex);
     }
     inputThread->connected = 0;
     pthread_mutex_unlock(&inputThread->mutex);
