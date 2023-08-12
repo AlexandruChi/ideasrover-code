@@ -1,4 +1,4 @@
-#include <pthread.h>
+#include "../communication/communication.h"
 
 int main() {
     

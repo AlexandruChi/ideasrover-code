@@ -10,8 +10,6 @@
 /* Functions that use Connection data type are the ones suposed to be used in the program. */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include "input.h"
-
 #ifndef and
 #define and &&
 #endif // and
@@ -40,16 +38,13 @@
 
 // TODO modify thread to run continously and connect to any avalible devices
 
-// TODO create fucntions for creating connections
-
 // TODO add errors
 
-// TODO fix header file
-
 // TODO create python suport
-// TODO create c++ suport
 
 // TODO stop ading TODOs
+
+typedef void* Connection;
 
 struct ConnectionThread {
     pthread_t threadID;
@@ -67,6 +62,8 @@ struct ConnectionThread {
     void *data;
     size_t dataSize;
 };
+
+uint64_t createConnectionThreadSocket(const void* socketData, _Bool server, _Bool network);
 
 // input treads continuasly colects data from device
 // when data is recived it is copied from local memory to shered memory
@@ -155,7 +152,8 @@ uint64_t createConnectionThreadSocket(const void* socketData, _Bool server, _Boo
     if (server) {
         bind(socketfd, socketaddr, sizeof(*socketaddr));
         listen(socketfd, 0);
-        memcpy(&socketfd + sizeof(int), &socketfd, sizeof(int));
+        void *socketMemoryAddress = &socketfd;
+        memcpy(socketMemoryAddress + sizeof(int), &socketfd, sizeof(int));
         *((int*)&socketfd) = accept(socketfd, NULL, NULL);
     } else {
         connect(socketfd, socketaddr, sizeof(*socketaddr));
@@ -218,16 +216,22 @@ struct ConnectionThread *createConnectionThread(const void *socketData, size_t d
 
 /* User functions. */
 
+// creates a AF_LOCAL/AF_UNIX connection where socket parameter is the path to the socket file
+// size of data reprezents the size of the structure, variable or buffer send and recived
 Connection createLocalConnection(const char* socket, _Bool input, _Bool server, size_t sizeOfData) {
     return createConnectionThread(socket, sizeOfData, input, false, server);
 }
 
+// creates a AF_INETconnection whith a ip and a port
+// if connection is server ip can be left as a empty string ("" or "\0") to listen for connections from any ip
+// alternativly the ip can be set to 0.0.0.0
+// size of data reprezents the size of the structure, variable or buffer send and recived
 Connection createNetworkConnection(const char* ip, unsigned short port, _Bool input, _Bool server, size_t sizeOfData) {
     void* socket = malloc(strlen(ip) + sizeof(port));
     if (!socket) {
         exit(1);
     }
-    memcpy(socket, port, sizeof(port));
+    memcpy(socket, &port, sizeof(port));
     strcpy(socket + sizeof(port), ip);
     return createConnectionThread(socket, sizeOfData, input, true, server);
 }
