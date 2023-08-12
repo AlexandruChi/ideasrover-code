@@ -6,9 +6,9 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-/* Functions that use Connection data type are the only ones suposed to be used in the program */
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+/* Functions that use Connection data type are the ones suposed to be used in the program. */
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "input.h"
 
@@ -41,11 +41,9 @@
 // TODO modify thread to run continously and connect to any avalible devices
 
 // TODO create fucntions for creating connections
-// TODO create Connection data type
 
 // TODO add errors
 
-// TODO fix documetation
 // TODO fix header file
 
 // TODO create python suport
@@ -136,9 +134,9 @@ void *inputThreadMain(void *arg) {
 // returns the file descriptor for the client
 // function return a 8 byte number where the first 4 bytes is the file descriptor of the client
 // the last 4 bytes of the number reprezent the server file descriptor
-long long createConnectionThreadSocket(const void* socketData, _Bool server, _Bool network) {
-    long long socketfd = socket((network ? AF_INET : AF_LOCAL), SOCK_STREAM, 0);
-    
+uint64_t createConnectionThreadSocket(const void* socketData, _Bool server, _Bool network) {
+    uint64_t socketfd = socket((network ? AF_INET : AF_LOCAL), SOCK_STREAM, 0);
+
     // convert socketData to sockaddr
     struct sockaddr *socketaddr;
     if (network) {
@@ -218,9 +216,25 @@ struct ConnectionThread *createConnectionThread(const void *socketData, size_t d
     return inputThread;
 }
 
+/* User functions. */
+
+Connection createLocalConnection(const char* socket, _Bool input, _Bool server, size_t sizeOfData) {
+    return createConnectionThread(socket, sizeOfData, input, false, server);
+}
+
+Connection createNetworkConnection(const char* ip, unsigned short port, _Bool input, _Bool server, size_t sizeOfData) {
+    void* socket = malloc(strlen(ip) + sizeof(port));
+    if (!socket) {
+        exit(1);
+    }
+    memcpy(socket, port, sizeof(port));
+    strcpy(socket + sizeof(port), ip);
+    return createConnectionThread(socket, sizeOfData, input, true, server);
+}
+
 // sends stop comand to thread and waits for thread to finish
 // dealocates all thread allocated memory
-// dealocates connection variable and set it NULL
+// dealocates connection variable and set its value to NULL
 void destroyConnection(Connection *connection) {
     struct ConnectionThread *connectionThread = (struct ConnectionThread*)(*connection);
     pthread_mutex_lock(&connectionThread->mutex);
