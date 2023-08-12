@@ -117,8 +117,6 @@ void *inputThreadMain(void *arg) {
     return NULL;
 }
 
-// TODO check if it works
-
 // returns the file descriptor for the client
 // function return a 8 byte number where the first 4 bytes is the file descriptor of the client
 // the last 4 bytes of the number reprezent the server file descriptor
