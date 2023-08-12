@@ -3,6 +3,11 @@
         "camera.h": "c",
         "cameradata.h": "c",
         "socket.h": "c",
-        "un.h": "c"
+        "un.h": "c",
+        "array": "c",
+        "string": "c",
+        "string_view": "c",
+        "vector": "c",
+        "input.h": "c"
     }
 }

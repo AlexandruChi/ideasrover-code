@@ -6,27 +6,35 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+/* Functions that use Connection data type are the only ones suposed to be used in the program */
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
 #include "input.h"
 
 #ifndef and
 #define and &&
-#endif
+#endif // and
 
 #ifndef or
 #define or ||
-#endif
+#endif // or
 
 #ifndef false
+#ifdef true
+#define false !true
+#else
 #define false NULL
-#endif
+#endif // true
+#endif // false
 
 #ifndef true
 #define true !false
-#endif
+#endif // true
 
 #ifndef loop
 #define loop for(;;)
-#endif
+#endif // loop
 
 // TODO rename input thread to connection thread
 
@@ -34,7 +42,6 @@
 
 // TODO create fucntions for creating connections
 // TODO create Connection data type
-// TODO create function for creating sockets
 
 // TODO add errors
 
@@ -124,6 +131,8 @@ void *inputThreadMain(void *arg) {
     return NULL;
 }
 
+// TODO check if it works
+
 // returns the file descriptor for the client
 // function return a 8 byte number where the first 4 bytes is the file descriptor of the client
 // the last 4 bytes of the number reprezent the server file descriptor
@@ -211,25 +220,42 @@ struct ConnectionThread *createConnectionThread(const void *socketData, size_t d
 
 // sends stop comand to thread and waits for thread to finish
 // dealocates all thread allocated memory
-void destroyConnection(struct ConnectionThread *inputThread) {
-    pthread_mutex_lock(&inputThread->mutex);
-    inputThread->running = 0;
-    pthread_mutex_unlock(&inputThread->mutex);
+// dealocates connection variable and set it NULL
+void destroyConnection(Connection *connection) {
+    struct ConnectionThread *connectionThread = (struct ConnectionThread*)(*connection);
+    pthread_mutex_lock(&connectionThread->mutex);
+    connectionThread->running = 0;
+    pthread_mutex_unlock(&connectionThread->mutex);
 
-    pthread_join(inputThread->threadID, NULL);
-    pthread_mutex_destroy(&inputThread->mutex);
-    pthread_cond_destroy(&inputThread->cond);
+    pthread_join(connectionThread->threadID, NULL);
+    pthread_mutex_destroy(&connectionThread->mutex);
+    pthread_cond_destroy(&connectionThread->cond);
     
-    free(inputThread->socketData);
-    inputThread->socketData = NULL;
-    free(inputThread->data);
-    inputThread->data = NULL;
+    free(connectionThread->socketData);
+    connectionThread->socketData = NULL;
+    free(connectionThread->data);
+    connectionThread->data = NULL;
+
+    free(*connection);
+    *connection = NULL;
 }
 
 // copies the data from the thread memory into caller thread memory
-// local copy is crated to alow data to be used whyle the input thread receves new data
-void copyConnectionThreadData(struct ConnectionThread *inputThread, void *dest) {
-    pthread_mutex_lock(&inputThread->mutex);
-    memcpy(dest, inputThread->data, inputThread->dataSize);
-    pthread_mutex_unlock(&inputThread->mutex);
+// local copy is crated to alow data to be used while the thread receves new data
+// dest should be the same type as the data set when creating the thread
+void getConnectionData(const Connection connection, void *dest) {
+    struct ConnectionThread *connectionThread = (struct ConnectionThread*)connection;
+    pthread_mutex_lock(&connectionThread->mutex);
+    memcpy(dest, connectionThread->data, connectionThread->dataSize);
+    pthread_mutex_unlock(&connectionThread->mutex);
+}
+
+// copies the data from the caller thread memory into thread memory
+// local copy is crated to alow caller thread to continue execution while the thread sends data
+// src should be the same type as the data set when creating the thread
+void setConnectionData(const Connection connection, void *src) {
+    struct ConnectionThread *connectionThread = (struct ConnectionThread*)connection;
+    pthread_mutex_lock(&connectionThread->mutex);
+    memcpy(connectionThread->data, src, connectionThread->dataSize);
+    pthread_mutex_unlock(&connectionThread->mutex);
 }
