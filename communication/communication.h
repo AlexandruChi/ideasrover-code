@@ -17,7 +17,7 @@
 
 #ifdef __cplusplus
 #include <cstddef>
-#else
+#else // __cplusplus
 #include <stddef.h>
 #include <stdbool.h>
 #endif // __cplusplus
