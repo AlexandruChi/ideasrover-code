@@ -7,6 +7,8 @@
 #include <arpa/inet.h>
 #include <stdbool.h>
 
+#include <stdio.h>
+
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /* Functions that use Connection data type are the ones suposed to be used in the program. */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -18,10 +20,6 @@
 #ifndef or
 #define or ||
 #endif // or
-
-#ifndef loop
-#define loop for(;;)
-#endif // loop
 
 // TODO rename input thread to connection thread
 
@@ -40,16 +38,18 @@ struct ConnectionThread {
     pthread_cond_t cond;
     pthread_mutex_t mutex;
 
+    // read only variables
     bool input;
     bool server;
     bool network;
-
+    void *socketData;
+    size_t dataSize;
+    
+    // shered variables
     bool running;
     bool connected;
-
-    void *socketData;
+    bool sendData;
     void *data;
-    size_t dataSize;
 };
 
 uint64_t createConnectionThreadSocket(const void* socketData, bool server, bool network);
@@ -60,16 +60,13 @@ void *inputThreadMain(void *arg) {
     struct ConnectionThread *inputThread = (struct ConnectionThread*)arg;
 
     // allocate memory
-    pthread_mutex_lock(&inputThread->mutex);
-    size_t recvDataSize = inputThread->dataSize;
-    pthread_mutex_unlock(&inputThread->mutex);
-    void *recvData = malloc(recvDataSize);
-    if (!recvData) {
+    void *data = malloc(inputThread->dataSize);
+    if (!data) {
         exit(1);
     }
 
-    pthread_mutex_lock(&inputThread->mutex);
     long long sockets = createConnectionThreadSocket(inputThread->socketData, inputThread->server, inputThread->network);
+    pthread_mutex_lock(&inputThread->mutex);
     inputThread->connected = 1;
     pthread_mutex_unlock(&inputThread->mutex);
 
@@ -77,29 +74,35 @@ void *inputThreadMain(void *arg) {
     memcpy(&socketfd, &sockets, sizeof(int));
     memcpy(&serverfd, &sockets + sizeof(int), sizeof(int));
 
-    // main loop
-    loop {
-        pthread_mutex_lock(&inputThread->mutex);
-        if (!inputThread->running) {
-            pthread_mutex_unlock(&inputThread->mutex);
-            break;
-        }
-        pthread_mutex_unlock(&inputThread->mutex);
-        recv(socketfd, recvData, recvDataSize, 0);
-        pthread_mutex_lock(&inputThread->mutex);
-        memcpy(inputThread->data, recvData, inputThread->dataSize);
-        pthread_mutex_unlock(&inputThread->mutex);
-    }
+    // TODO inprove performance of main loop or create 2 types of thread main for input and output
 
-    free(recvData);
+    // main loop
+    pthread_mutex_lock(&inputThread->mutex);
+    while(inputThread->running) {
+        pthread_mutex_unlock(&inputThread->mutex);
+        if (inputThread->input) {
+            recv(socketfd, data, inputThread->dataSize, 0);
+            pthread_mutex_lock(&inputThread->mutex);
+            memcpy(inputThread->data, data, inputThread->dataSize);
+        } else {
+            pthread_mutex_lock(&inputThread->mutex);
+            if (inputThread->sendData) {
+                memcpy(data, inputThread->data, inputThread->dataSize);
+                pthread_mutex_unlock(&inputThread->mutex);
+                send(socketfd, data, inputThread->dataSize, 0);
+                pthread_mutex_lock(&inputThread->mutex);
+            }
+        }
+    }
+    pthread_mutex_unlock(&inputThread->mutex);
+
+    free(data);
     close(socketfd);
 
-    pthread_mutex_lock(&inputThread->mutex);
     if (inputThread->network) {
-        pthread_mutex_unlock(&inputThread->mutex);
         close(serverfd);
-        pthread_mutex_lock(&inputThread->mutex);
     }
+    pthread_mutex_lock(&inputThread->mutex);
     inputThread->connected = 0;
     pthread_mutex_unlock(&inputThread->mutex);
 
@@ -115,6 +118,9 @@ uint64_t createConnectionThreadSocket(const void* socketData, bool server, bool 
     // convert socketData to sockaddr
     struct sockaddr *socketaddr;
     if (network) {
+        if (!(socketaddr = malloc(sizeof(struct sockaddr_in)))) {
+            exit(1);
+        }
         ((struct sockaddr_in*)socketaddr)->sin_family = AF_INET;
         if (!strlen(socketData + sizeof(in_port_t)) and server) {
             ((struct sockaddr_in*)socketaddr)->sin_addr.s_addr = INADDR_ANY;
@@ -123,6 +129,9 @@ uint64_t createConnectionThreadSocket(const void* socketData, bool server, bool 
         }
         ((struct sockaddr_in*)socketaddr)->sin_port = htons(*((in_port_t*)socketData));
     } else {
+        if (!(socketaddr = malloc(sizeof(struct sockaddr_un)))) {
+            exit(1);
+        }
         ((struct sockaddr_un*)socketaddr)->sun_family = AF_LOCAL;
         strcpy(((struct sockaddr_un*)socketaddr)->sun_path, socketData);
     }
@@ -160,10 +169,10 @@ struct ConnectionThread *createConnectionThread(const void *socketData, size_t d
     inputThread->network = network;
     inputThread->input = input;
 
-    if (!pthread_mutex_init(&inputThread->mutex, NULL)) {
+    if (pthread_mutex_init(&inputThread->mutex, NULL)) {
         exit(1);
     }
-    if (!pthread_cond_init(&inputThread->cond, NULL)) {
+    if (pthread_cond_init(&inputThread->cond, NULL)) {
         exit(1);
     }
 
@@ -185,7 +194,7 @@ struct ConnectionThread *createConnectionThread(const void *socketData, size_t d
         exit(1);
     }
 
-    if (!pthread_create(&inputThread->threadID, NULL, inputThreadMain, inputThread)) {
+    if (pthread_create(&inputThread->threadID, NULL, inputThreadMain, inputThread)) {
         exit(1);
     }
 
@@ -253,5 +262,20 @@ void setConnectionData(const Connection connection, void *src) {
     struct ConnectionThread *connectionThread = (struct ConnectionThread*)connection;
     pthread_mutex_lock(&connectionThread->mutex);
     memcpy(connectionThread->data, src, connectionThread->dataSize);
+    connectionThread->sendData = true;
     pthread_mutex_unlock(&connectionThread->mutex);
+}
+
+// check if connection exists and if it is connected or not
+// can be used to check if the thread is still waiting to connect or the other end is closed
+bool isConnected(const Connection connection) {
+    if (connection) {
+        pthread_mutex_lock(&((struct ConnectionThread*)connection)->mutex);
+        if (((struct ConnectionThread*)connection)->connected) {
+            pthread_mutex_unlock(&((struct ConnectionThread*)connection)->mutex);
+            return true;
+        }
+        pthread_mutex_unlock(&((struct ConnectionThread*)connection)->mutex);
+    }
+    return false;
 }

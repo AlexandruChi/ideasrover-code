@@ -12,8 +12,8 @@
  * in the threads memory
  */
 
-#ifndef __communication_h
-#define __communication_h
+#ifndef __connection_h
+#define __connection_h
 
 #ifdef __cplusplus
 #include <cstddef>
@@ -53,8 +53,12 @@ void getConnectionData(const Connection connection, void *dest);
 // src should be the same type as the data set when creating the thread
 void setConnectionData(const Connection connection, void *src);
 
+// check if connection exists and if it is connected or not
+// can be used to check if the thread is still waiting to connect or the other end is closed
+bool isConnected(const Connection connection);
+
 #ifdef __cplusplus
 }
 #endif // __cplusplus
 
-#endif // __communication_h
+#endif // __connection_h
