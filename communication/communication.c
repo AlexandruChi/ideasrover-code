@@ -5,6 +5,7 @@
 #include <sys/un.h>
 #include <unistd.h>
 #include <arpa/inet.h>
+#include <stdbool.h>
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /* Functions that use Connection data type are the ones suposed to be used in the program. */
@@ -17,18 +18,6 @@
 #ifndef or
 #define or ||
 #endif // or
-
-#ifndef false
-#ifdef true
-#define false !true
-#else
-#define false NULL
-#endif // true
-#endif // false
-
-#ifndef true
-#define true !false
-#endif // true
 
 #ifndef loop
 #define loop for(;;)
@@ -51,19 +40,19 @@ struct ConnectionThread {
     pthread_cond_t cond;
     pthread_mutex_t mutex;
 
-    _Bool input;
-    _Bool server;
-    _Bool network;
+    bool input;
+    bool server;
+    bool network;
 
-    _Bool running;
-    _Bool connected;
+    bool running;
+    bool connected;
 
     void *socketData;
     void *data;
     size_t dataSize;
 };
 
-uint64_t createConnectionThreadSocket(const void* socketData, _Bool server, _Bool network);
+uint64_t createConnectionThreadSocket(const void* socketData, bool server, bool network);
 
 // input treads continuasly colects data from device
 // when data is recived it is copied from local memory to shered memory
@@ -120,7 +109,7 @@ void *inputThreadMain(void *arg) {
 // returns the file descriptor for the client
 // function return a 8 byte number where the first 4 bytes is the file descriptor of the client
 // the last 4 bytes of the number reprezent the server file descriptor
-uint64_t createConnectionThreadSocket(const void* socketData, _Bool server, _Bool network) {
+uint64_t createConnectionThreadSocket(const void* socketData, bool server, bool network) {
     uint64_t socketfd = socket((network ? AF_INET : AF_LOCAL), SOCK_STREAM, 0);
 
     // convert socketData to sockaddr
@@ -158,7 +147,7 @@ uint64_t createConnectionThreadSocket(const void* socketData, _Bool server, _Boo
 // if host name os used for the soket the first 2 bytes reprezent the port (in_port_t)
 // for server the host is the adress on witch the server listens for connesction
 // to lisne to any connection the host should be set to a empty string
-struct ConnectionThread *createConnectionThread(const void *socketData, size_t dataSize, _Bool input, _Bool network, _Bool server) {
+struct ConnectionThread *createConnectionThread(const void *socketData, size_t dataSize, bool input, bool network, bool server) {
     struct ConnectionThread *inputThread = (struct ConnectionThread*)malloc(sizeof(struct ConnectionThread));
     if (!inputThread) {
         exit(1);
@@ -207,7 +196,7 @@ struct ConnectionThread *createConnectionThread(const void *socketData, size_t d
 
 // creates a AF_LOCAL/AF_UNIX connection where socket parameter is the path to the socket file
 // size of data reprezents the size of the structure, variable or buffer send and recived
-Connection createLocalConnection(const char* socket, _Bool input, _Bool server, size_t sizeOfData) {
+Connection createLocalConnection(const char* socket, bool input, bool server, size_t sizeOfData) {
     return createConnectionThread(socket, sizeOfData, input, false, server);
 }
 
@@ -215,7 +204,7 @@ Connection createLocalConnection(const char* socket, _Bool input, _Bool server, 
 // if connection is server ip can be left as a empty string ("" or "\0") to listen for connections from any ip
 // alternativly the ip can be set to 0.0.0.0
 // size of data reprezents the size of the structure, variable or buffer send and recived
-Connection createNetworkConnection(const char* ip, unsigned short port, _Bool input, _Bool server, size_t sizeOfData) {
+Connection createNetworkConnection(const char* ip, unsigned short port, bool input, bool server, size_t sizeOfData) {
     void* socket = malloc(strlen(ip) + sizeof(port));
     if (!socket) {
         exit(1);
