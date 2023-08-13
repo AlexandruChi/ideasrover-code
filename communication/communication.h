@@ -1,7 +1,7 @@
 /* C/C++ */
 
-/* all libraries inlcuded in this header are used
- * only for bool and size_t and can be removed
+/* all libraries inlcuded in this header
+ * are used only for bool and size_t
  * 
  * check source code for documentation and 
  * implementation for the threads and sockets
