@@ -1,0 +1,18 @@
+---
+triple:          'arm64-apple-darwin'
+binary-path:     '/Users/alexandruchiriac/ideasrover code/rover/rover'
+relocations:
+  - { offsetInCU: 0x26, offset: 0x26, size: 0x8, addend: 0x0, symName: _main, symObjAddr: 0x0, symBinAddr: 0x1000034CC, symSize: 0x84 }
+  - { offsetInCU: 0x41, offset: 0x41, size: 0x8, addend: 0x0, symName: _main, symObjAddr: 0x0, symBinAddr: 0x1000034CC, symSize: 0x84 }
+  - { offsetInCU: 0x26, offset: 0xB0, size: 0x8, addend: 0x0, symName: _inputThreadMain, symObjAddr: 0x0, symBinAddr: 0x100003550, symSize: 0x204 }
+  - { offsetInCU: 0x262, offset: 0x2EC, size: 0x8, addend: 0x0, symName: _inputThreadMain, symObjAddr: 0x0, symBinAddr: 0x100003550, symSize: 0x204 }
+  - { offsetInCU: 0x2D0, offset: 0x35A, size: 0x8, addend: 0x0, symName: _createConnectionThreadSocket, symObjAddr: 0x204, symBinAddr: 0x100003754, symSize: 0x1F8 }
+  - { offsetInCU: 0x34C, offset: 0x3D6, size: 0x8, addend: 0x0, symName: __OSSwapInt16, symObjAddr: 0x3FC, symBinAddr: 0x10000394C, symSize: 0x24 }
+  - { offsetInCU: 0x374, offset: 0x3FE, size: 0x8, addend: 0x0, symName: _createConnectionThread, symObjAddr: 0x420, symBinAddr: 0x100003970, symSize: 0x1F0 }
+  - { offsetInCU: 0x3F0, offset: 0x47A, size: 0x8, addend: 0x0, symName: _createLocalConnection, symObjAddr: 0x610, symBinAddr: 0x100003B60, symSize: 0x58 }
+  - { offsetInCU: 0x442, offset: 0x4CC, size: 0x8, addend: 0x0, symName: _createNetworkConnection, symObjAddr: 0x668, symBinAddr: 0x100003BB8, symSize: 0xB8 }
+  - { offsetInCU: 0x4B0, offset: 0x53A, size: 0x8, addend: 0x0, symName: _destroyConnection, symObjAddr: 0x720, symBinAddr: 0x100003C70, symSize: 0xAC }
+  - { offsetInCU: 0x4E2, offset: 0x56C, size: 0x8, addend: 0x0, symName: _getConnectionData, symObjAddr: 0x7CC, symBinAddr: 0x100003D1C, symSize: 0x5C }
+  - { offsetInCU: 0x522, offset: 0x5AC, size: 0x8, addend: 0x0, symName: _setConnectionData, symObjAddr: 0x828, symBinAddr: 0x100003D78, symSize: 0x68 }
+  - { offsetInCU: 0x566, offset: 0x5F0, size: 0x8, addend: 0x0, symName: _isConnected, symObjAddr: 0x890, symBinAddr: 0x100003DE0, symSize: 0x98 }
+...

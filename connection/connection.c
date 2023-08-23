@@ -27,7 +27,11 @@
 
 // TODO add errors
 
+// TODO fix AF_LOCAL sockets if they crash (or make the program not crash)
+
 // TODO create python suport
+
+// TODO add isConnected function suport for AF_LOCAL/AF_UNIX connection
 
 // TODO stop ading TODOs
 
@@ -48,7 +52,7 @@ struct ConnectionThread {
     // shered variables
     bool running;
     bool connected;
-    bool sendData;
+    bool newData;
     void *data;
 };
 
@@ -64,10 +68,10 @@ void *inputThreadMain(void *arg) {
     if (!data) {
         exit(1);
     }
-
+    
     long long sockets = createConnectionThreadSocket(inputThread->socketData, inputThread->server, inputThread->network);
     pthread_mutex_lock(&inputThread->mutex);
-    inputThread->connected = 1;
+    inputThread->connected = true;
     pthread_mutex_unlock(&inputThread->mutex);
 
     int socketfd, serverfd;
@@ -84,12 +88,14 @@ void *inputThreadMain(void *arg) {
             recv(socketfd, data, inputThread->dataSize, 0);
             pthread_mutex_lock(&inputThread->mutex);
             memcpy(inputThread->data, data, inputThread->dataSize);
+            inputThread->newData = true;
         } else {
             pthread_mutex_lock(&inputThread->mutex);
-            if (inputThread->sendData) {
+            if (inputThread->newData) {
                 memcpy(data, inputThread->data, inputThread->dataSize);
                 pthread_mutex_unlock(&inputThread->mutex);
                 send(socketfd, data, inputThread->dataSize, 0);
+                inputThread->newData = false;
                 pthread_mutex_lock(&inputThread->mutex);
             }
         }
@@ -99,9 +105,14 @@ void *inputThreadMain(void *arg) {
     free(data);
     close(socketfd);
 
-    if (inputThread->network) {
+    if (inputThread->server) {
         close(serverfd);
     }
+    
+    if (!inputThread->network) {
+        unlink(inputThread->socketData);
+    }
+    
     pthread_mutex_lock(&inputThread->mutex);
     inputThread->connected = 0;
     pthread_mutex_unlock(&inputThread->mutex);
@@ -137,14 +148,19 @@ uint64_t createConnectionThreadSocket(const void* socketData, bool server, bool 
     }
 
     if (server) {
-        bind(socketfd, socketaddr, sizeof(*socketaddr));
-        listen(socketfd, 0);
+        if (network) {
+            unlink(socketData);
+        }
+        bind((int)socketfd, socketaddr, sizeof(*socketaddr));
+        listen((int)socketfd, 0);
         void *socketMemoryAddress = &socketfd;
         memcpy(socketMemoryAddress + sizeof(int), &socketfd, sizeof(int));
-        *((int*)&socketfd) = accept(socketfd, NULL, NULL);
+        *((int*)&socketfd) = accept((int)socketfd, NULL, NULL);
     } else {
-        connect(socketfd, socketaddr, sizeof(*socketaddr));
+        connect((int)socketfd, socketaddr, sizeof(*socketaddr));
     }
+
+    free(socketaddr);
 
     return socketfd;
 }
@@ -162,12 +178,13 @@ struct ConnectionThread *createConnectionThread(const void *socketData, size_t d
         exit(1);
     }
     
-    inputThread->running = 1;
-    inputThread->connected = 0;
+    inputThread->running = true;
+    inputThread->connected = false;
     inputThread->dataSize = dataSize;
     inputThread->server = server;
     inputThread->network = network;
     inputThread->input = input;
+    inputThread->newData = false;
 
     if (pthread_mutex_init(&inputThread->mutex, NULL)) {
         exit(1);
@@ -209,7 +226,7 @@ Connection createLocalConnection(const char* socket, bool input, bool server, si
     return createConnectionThread(socket, sizeOfData, input, false, server);
 }
 
-// creates a AF_INETconnection whith a ip and a port
+// creates a AF_INET connection whith a ip and a port
 // if connection is server ip can be left as a empty string ("" or "\0") to listen for connections from any ip
 // alternativly the ip can be set to 0.0.0.0
 // size of data reprezents the size of the structure, variable or buffer send and recived
@@ -245,16 +262,26 @@ void destroyConnection(Connection *connection) {
     *connection = NULL;
 }
 
+// TODO make better system for reciving data
+
+// if data was recived function return true else false
+// when new data is recived the old one is overwriten
 // copies the data from the thread memory into caller thread memory
 // local copy is crated to alow data to be used while the thread receves new data
 // dest should be the same type as the data set when creating the thread
-void getConnectionData(const Connection connection, void *dest) {
+bool getConnectionData(const Connection connection, void *dest) {
     struct ConnectionThread *connectionThread = (struct ConnectionThread*)connection;
     pthread_mutex_lock(&connectionThread->mutex);
+    if (!connectionThread->newData) {
+        pthread_mutex_unlock(&connectionThread->mutex);
+        return false;
+    }
     memcpy(dest, connectionThread->data, connectionThread->dataSize);
     pthread_mutex_unlock(&connectionThread->mutex);
+    return true;
 }
 
+// if data was set and not send the fucntion waits for data to be send
 // copies the data from the caller thread memory into thread memory
 // local copy is crated to alow caller thread to continue execution while the thread sends data
 // src should be the same type as the data set when creating the thread
@@ -262,12 +289,14 @@ void setConnectionData(const Connection connection, void *src) {
     struct ConnectionThread *connectionThread = (struct ConnectionThread*)connection;
     pthread_mutex_lock(&connectionThread->mutex);
     memcpy(connectionThread->data, src, connectionThread->dataSize);
-    connectionThread->sendData = true;
+    connectionThread->newData = true;
     pthread_mutex_unlock(&connectionThread->mutex);
 }
 
 // check if connection exists and if it is connected or not
 // can be used to check if the thread is still waiting to connect or the other end is closed
+// checking if device has connected only works for network connection
+// checking if connection is closed works for any connection
 bool isConnected(const Connection connection) {
     if (connection) {
         pthread_mutex_lock(&((struct ConnectionThread*)connection)->mutex);

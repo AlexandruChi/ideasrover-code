@@ -43,11 +43,14 @@ Connection createNetworkConnection(const char* ip, unsigned short port, bool inp
 // dealocates connection variable and set its value to NULL
 void destroyConnection(Connection *connection);
 
+// if data was recived function return true else false
+// when new data is recived the old one is overwriten
 // copies the data from the thread memory into caller thread memory
 // local copy is crated to alow data to be used while the thread receves new data
 // dest should be the same type as the data set when creating the thread
-void getConnectionData(const Connection connection, void *dest);
+bool getConnectionData(const Connection connection, void *dest);
 
+// if data was set and not send the fucntion waits for data to be send
 // copies the data from the caller thread memory into thread memory
 // local copy is crated to alow caller thread to continue execution while the thread sends data
 // src should be the same type as the data set when creating the thread
