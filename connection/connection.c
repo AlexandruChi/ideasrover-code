@@ -31,8 +31,6 @@
 
 // TODO create python suport
 
-// TODO add isConnected function suport for AF_LOCAL/AF_UNIX connection
-
 // TODO stop ading TODOs
 
 typedef void* Connection;
@@ -58,8 +56,6 @@ struct ConnectionThread {
 
 uint64_t createConnectionThreadSocket(const void* socketData, bool server, bool network);
 
-// input treads continuasly colects data from device
-// when data is recived it is copied from local memory to shered memory
 void *inputThreadMain(void *arg) {
     struct ConnectionThread *inputThread = (struct ConnectionThread*)arg;
 
