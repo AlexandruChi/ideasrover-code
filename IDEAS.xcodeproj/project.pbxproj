@@ -7,10 +7,11 @@
 	objects = {
 
 /* Begin PBXFileReference section */
-		F5E607372AA9AF8300EC7677 /* ultrasonicdata.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ultrasonicdata.h; sourceTree = "<group>"; };
-		F5E607382AA9AF8300EC7677 /* cameradata.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cameradata.h; sourceTree = "<group>"; };
 		F5E6073A2AA9AF8C00EC7677 /* connection.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = connection.h; sourceTree = "<group>"; };
 		F5E6073B2AA9AF8C00EC7677 /* connection.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = connection.c; sourceTree = "<group>"; };
+		F5E82D562AA9F5A200D852EE /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		F5E82D582AA9F5D800D852EE /* UltrasonicSensor.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = UltrasonicSensor.cpp; sourceTree = "<group>"; };
+		F5E82D592AA9F5D800D852EE /* UltrasonicSensor.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = UltrasonicSensor.hpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -20,8 +21,6 @@
 				F5E6073C2AA9AFA400EC7677 /* rover */,
 				F5E6073D2AA9AFA400EC7677 /* test */,
 				F5E607392AA9AF8C00EC7677 /* connection */,
-				F5E607382AA9AF8300EC7677 /* cameradata.h */,
-				F5E607372AA9AF8300EC7677 /* ultrasonicdata.h */,
 			);
 			sourceTree = "<group>";
 		};
@@ -37,6 +36,8 @@
 		F5E6073C2AA9AFA400EC7677 /* rover */ = {
 			isa = PBXGroup;
 			children = (
+				F5E82D572AA9F5BC00D852EE /* components */,
+				F5E82D562AA9F5A200D852EE /* main.cpp */,
 			);
 			path = rover;
 			sourceTree = "<group>";
@@ -48,21 +49,30 @@
 			path = test;
 			sourceTree = "<group>";
 		};
+		F5E82D572AA9F5BC00D852EE /* components */ = {
+			isa = PBXGroup;
+			children = (
+				F5E82D582AA9F5D800D852EE /* UltrasonicSensor.cpp */,
+				F5E82D592AA9F5D800D852EE /* UltrasonicSensor.hpp */,
+			);
+			path = components;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXLegacyTarget section */
-		F5DDE6932AA9AEB5006761D3 /* IDEAS */ = {
+		F5E82D5A2AA9F74900D852EE /* rover */ = {
 			isa = PBXLegacyTarget;
 			buildArgumentsString = "$(ACTION)";
-			buildConfigurationList = F5DDE6962AA9AEB5006761D3 /* Build configuration list for PBXLegacyTarget "IDEAS" */;
+			buildConfigurationList = F5E82D5B2AA9F74900D852EE /* Build configuration list for PBXLegacyTarget "rover" */;
 			buildPhases = (
 			);
 			buildToolPath = /usr/bin/make;
 			dependencies = (
 			);
-			name = IDEAS;
+			name = rover;
 			passBuildSettingsInEnvironment = 1;
-			productName = IDEAS;
+			productName = rover;
 		};
 /* End PBXLegacyTarget section */
 
@@ -70,10 +80,10 @@
 		F5DDE68F2AA9AEB5006761D3 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				BuildIndependentTargetsInParallel = 1;
+				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1500;
 				TargetAttributes = {
-					F5DDE6932AA9AEB5006761D3 = {
+					F5E82D5A2AA9F74900D852EE = {
 						CreatedOnToolsVersion = 15.0;
 					};
 				};
@@ -90,7 +100,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				F5DDE6932AA9AEB5006761D3 /* IDEAS */,
+				F5E82D5A2AA9F74900D852EE /* rover */,
 			);
 		};
 /* End PBXProject section */
@@ -207,7 +217,7 @@
 			};
 			name = Release;
 		};
-		F5DDE6972AA9AEB5006761D3 /* Debug */ = {
+		F5E82D5C2AA9F74900D852EE /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
@@ -221,7 +231,7 @@
 			};
 			name = Debug;
 		};
-		F5DDE6982AA9AEB5006761D3 /* Release */ = {
+		F5E82D5D2AA9F74900D852EE /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
@@ -244,11 +254,11 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		F5DDE6962AA9AEB5006761D3 /* Build configuration list for PBXLegacyTarget "IDEAS" */ = {
+		F5E82D5B2AA9F74900D852EE /* Build configuration list for PBXLegacyTarget "rover" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				F5DDE6972AA9AEB5006761D3 /* Debug */,
-				F5DDE6982AA9AEB5006761D3 /* Release */,
+				F5E82D5C2AA9F74900D852EE /* Debug */,
+				F5E82D5D2AA9F74900D852EE /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
