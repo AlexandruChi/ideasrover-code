@@ -6,11 +6,46 @@
 	objectVersion = 56;
 	objects = {
 
+/* Begin PBXFileReference section */
+		F5E607372AA9AF8300EC7677 /* ultrasonicdata.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ultrasonicdata.h; sourceTree = "<group>"; };
+		F5E607382AA9AF8300EC7677 /* cameradata.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cameradata.h; sourceTree = "<group>"; };
+		F5E6073A2AA9AF8C00EC7677 /* connection.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = connection.h; sourceTree = "<group>"; };
+		F5E6073B2AA9AF8C00EC7677 /* connection.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = connection.c; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
 /* Begin PBXGroup section */
 		F5DDE68E2AA9AEB5006761D3 = {
 			isa = PBXGroup;
 			children = (
+				F5E6073C2AA9AFA400EC7677 /* rover */,
+				F5E6073D2AA9AFA400EC7677 /* test */,
+				F5E607392AA9AF8C00EC7677 /* connection */,
+				F5E607382AA9AF8300EC7677 /* cameradata.h */,
+				F5E607372AA9AF8300EC7677 /* ultrasonicdata.h */,
 			);
+			sourceTree = "<group>";
+		};
+		F5E607392AA9AF8C00EC7677 /* connection */ = {
+			isa = PBXGroup;
+			children = (
+				F5E6073A2AA9AF8C00EC7677 /* connection.h */,
+				F5E6073B2AA9AF8C00EC7677 /* connection.c */,
+			);
+			path = connection;
+			sourceTree = "<group>";
+		};
+		F5E6073C2AA9AFA400EC7677 /* rover */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = rover;
+			sourceTree = "<group>";
+		};
+		F5E6073D2AA9AFA400EC7677 /* test */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = test;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
