@@ -5,10 +5,11 @@
 
 #include "../../connection/connection.h"
 
-class UltrasonicSensor {
+class Component {
     Connection connection;
 public:
-    UltrasonicSensor(string)
-}
+    UltrasonicSensor(std::string socketPath);
+    ~UltrasonicSensor();
+};
 
 #endif /* UltrasonicSensor_hpp */
