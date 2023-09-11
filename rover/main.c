@@ -94,6 +94,10 @@ int main() {
     phoneInput = createNetworkConnection("", PHONE_INPUT_PORT, true, true, sizeof(roverParameters));
     phoneOutput = createNetworkConnection("", PHONE_OUTPUT_PORT, false, true, sizeof(roverData));
 
+
+    
+
+
     wait_while_not (
             isConnected(ultrasonicSensor) and
             isConnected(objectDetectionCamera) and
