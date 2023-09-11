@@ -1,14 +1,30 @@
 // TODO header file with the component path and ports
-// TODO maybe add Connection with bouth input and output if it is not to hard
 
 #include "../connection/connection.h"
 
+#ifndef and
+#define and &&
+#endif // and
+
+#ifndef or
+#define or ||
+#endif // or
+
+#ifndef loop
+#define loop while(1)
+#endif
+
+#define PHONE_INPUT_PORT 4000
+#define PHONE_OUTPUT_PORT 4001
+
+// TODO make better data types
+
 struct objectDetectionCameraData {
-    // insert something here
+    // insert something here or replace struct
 };
 
 struct PixyCameraData {
-    // insert something here
+    // insert something here or replace struct
 };
 
 struct batteryManagementSystemData {
@@ -23,7 +39,24 @@ struct ESCData {
     enum ESCModes mode;
 };
 
-struct 
+struct selfDrivingData {
+    // insert something here
+};
+
+struct roverControll {
+    struct ESCData esc;
+    double speed;
+};
+
+struct roverData {
+    // data to display on phone
+};
+
+struct roverParameters {
+    bool debug;
+    bool running;
+    bool test;
+};
 
 int main() {
 
@@ -42,6 +75,12 @@ int main() {
     struct ESCData ESCData;
     double steer;
 
+    struct selfDrivingData selfDrivingData;
+    struct roverControll roverControll;
+
+    struct roverParameters roverParameters;
+    struct roverData roverData;
+
     // creating server for input devices
     ultrasonicSensor = createLocalConnection("/tmp/ultrasonicsensor", true, true, sizeof(distance));
     objectDetectionCamera = createLocalConnection("/tmp/objectdetectioncamera", true, true, sizeof(objectDetectionCameraData));
@@ -53,7 +92,30 @@ int main() {
     servo = createLocalConnection("/tmp/servo", false, true, sizeof(steer));
 
     // create server for the input-output devices
-    selfDrvingInput = createLocalConnection("/tmp/selfdrivinginput", true, true, )
+    selfDrvingInput = createLocalConnection("/tmp/selfdrivinginput", true, true, sizeof(selfDrivingData));
+    selfDrivingOutput = createLocalConnection("/tmp/selfdrivingoutput", false, true, sizeof(roverControll));
+
+    phoneInput = createNetworkConnection("", PHONE_INPUT_PORT, true, true, sizeof(roverParameters));
+    phoneOutput = createNetworkConnection("", PHONE_OUTPUT_PORT, false, true, sizeof(roverData));
+
+    while (
+        !(
+            isConnected(ultrasonicSensor) and
+            isConnected(objectDetectionCamera) and
+            isConnected(PixyCamera) and
+            isConnected(batteryManagementSystem) and
+            isConnected(ESC) and
+            isConnected(servo) and
+            isConnected(selfDrvingInput) and
+            isConnected(selfDrivingOutput) and
+            isConnected(phoneInput) and
+            isConnected(phoneOutput)
+        )
+    ) {}
+
+    loop {
+        
+    }
 
     // find a way to stop the program when powering off the PI
     return 0;
