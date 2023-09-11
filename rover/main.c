@@ -2,17 +2,13 @@
 
 #include "../connection/connection.h"
 
-#ifndef and
 #define and &&
-#endif // and
-
-#ifndef or
 #define or ||
-#endif // or
 
-#ifndef loop
-#define loop while(1)
-#endif
+#define loop while (1)
+
+#define wait_while(X) while (X) {}
+#define wait_while_not(X) wait_while(!(X))
 
 #define PHONE_INPUT_PORT 4000
 #define PHONE_OUTPUT_PORT 4001
@@ -98,8 +94,7 @@ int main() {
     phoneInput = createNetworkConnection("", PHONE_INPUT_PORT, true, true, sizeof(roverParameters));
     phoneOutput = createNetworkConnection("", PHONE_OUTPUT_PORT, false, true, sizeof(roverData));
 
-    while (
-        !(
+    wait_while_not (
             isConnected(ultrasonicSensor) and
             isConnected(objectDetectionCamera) and
             isConnected(PixyCamera) and
@@ -110,8 +105,7 @@ int main() {
             isConnected(selfDrivingOutput) and
             isConnected(phoneInput) and
             isConnected(phoneOutput)
-        )
-    ) {}
+    )
 
     loop {
         
