@@ -124,10 +124,6 @@ int main() {
     // TODO fix errors
     // TODO maybe check data before using it
     loop {
-        // get parameters and send data to phone
-        getConnectionData(phoneInput, &roverParameters);
-        setConnectionData(phoneOutput, &roverData);
-
         // get data from sensors and cameras
         getConnectionData(ultrasonicSensor, &distance);
         getConnectionData(objectDetectionCamera, &objectData);
@@ -149,6 +145,13 @@ int main() {
         
         setConnectionData(servo, &steer);
         setConnectionData(ESC, &ESCData);
+
+        // insert code here for data procesing
+        // roverData = something usefull
+
+        // get parameters and send data to phone
+        setConnectionData(phoneOutput, &roverData);
+        getConnectionData(phoneInput, &roverParameters);
     }
 
     // find a way to stop the program when powering off the PI
