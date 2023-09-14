@@ -1,15 +1,32 @@
 #include <bcm2835.h>
 
-#include "../connection/connection.h"
+#include "../rover.h"
+
+#define ULTRASONIC_SENSOR_TRIGGER_DELAY_US 10
+#define SPEED_OF_SOUND_M_US 0.343
 
 int main() {
-    double distance;
+    double distance = 0;
 
-    if (!bcm2835_init()) {
-        exit(1);
+    wait_while_not (bcm2835_init())
+
+    Connection connection = createLocalConnection(ULTRASONIC_SENSOR_SOCKET_PATH, false, false, sizeof(double));
+
+    bcm2835_gpio_fsel(ULTRASONIC_SENSOR_TRIGGER_PIN, BCM2835_GPIO_FSEL_OUTP);
+    bcm2835_gpio_write(ULTRASONIC_SENSOR_TRIGGER_PIN, LOW);
+    bcm2835_gpio_fsel(ULTRASONIC_SENSOR_ECHO_PIN, BCM2835_GPIO_FSEL_INPT);
+
+    loop {
+        bcm2835_gpio_write(ULTRASONIC_SENSOR_TRIGGER_PIN, HIGH);
+        bcm2835_delayMicroseconds(ULTRASONIC_SENSOR_TRIGGER_DELAY_US);
+        bcm2835_gpio_write(ULTRASONIC_SENSOR_TRIGGER_PIN, LOW);
+        wait_while_not (bcm2835_gpio_lev(ULTRASONIC_SENSOR_ECHO_PIN))
+        uint32_t startTimer = bcm2835_st_read();
+        wait_while (bcm2835_gpio_lev(ULTRASONIC_SENSOR_ECHO_PIN));
+        uint32_t endTimer = bcm2835_st_read();
+        distance = (endTimer - startTimer) / 2 * SPEED_OF_SOUND_M_US;
+        setConnectionData(connection, &distance);
     }
-
-    Connection connection = createLocalConnection()
 
     bcm2835_close();
     return 0;

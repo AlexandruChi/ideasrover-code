@@ -2,18 +2,7 @@
 
 #include <unistd.h>
 
-#include "../connection/connection.h"
-
-#define and &&
-#define or ||
-
-#define loop for(;;)
-
-#define wait_while(X) while (X) {}
-#define wait_while_not(X) wait_while(!(X))
-
-#define PHONE_INPUT_PORT 4000
-#define PHONE_OUTPUT_PORT 4001
+#include "../rover.h"
 
 // TODO make better data types
 
@@ -82,19 +71,21 @@ int main() {
     struct roverParameters roverParameters;
     struct roverData roverData;
 
+    // TODO clean tmp files
+
     // creating server for input devices
-    ultrasonicSensor = createLocalConnection("/tmp/ultrasonicsensor", true, true, sizeof(distance));
-    objectDetectionCamera = createLocalConnection("/tmp/objectdetectioncamera", true, true, sizeof(objectData));
-    PixyCamera = createLocalConnection("/tmp/pixycamera", true, true, sizeof(laneData));
-    batteryManagementSystem = createLocalConnection("tmp/batterymanagementsystem", true, true, sizeof(batteryData));
+    ultrasonicSensor = createLocalConnection(ULTRASONIC_SENSOR_SOCKET_PATH, true, true, sizeof(distance));
+    objectDetectionCamera = createLocalConnection(OBJECT_DETECTION_CAMERA_PATH, true, true, sizeof(objectData));
+    PixyCamera = createLocalConnection(PIXY_CAMERA_PATH, true, true, sizeof(laneData));
+    batteryManagementSystem = createLocalConnection(BATTERY_MANAGEMENT_SYSTEM_PATH, true, true, sizeof(batteryData));
 
     // creating server for output devices
-    ESC = createLocalConnection("/tmp/esc", false, true, sizeof(ESCData));
-    servo = createLocalConnection("/tmp/servo", false, true, sizeof(steer));
+    ESC = createLocalConnection(ESC_PATH, false, true, sizeof(ESCData));
+    servo = createLocalConnection(SERVO_PATH, false, true, sizeof(steer));
 
     // create server for the input-output devices
-    selfDrvingInput = createLocalConnection("/tmp/selfdrivinginput", true, true, sizeof(selfDrivingData));
-    selfDrivingOutput = createLocalConnection("/tmp/selfdrivingoutput", false, true, sizeof(roverControll));
+    selfDrvingInput = createLocalConnection(SELF_DRIVING_INPUT_PATH, true, true, sizeof(selfDrivingData));
+    selfDrivingOutput = createLocalConnection(SELF_DRIVING_OUTPUT_PATH, false, true, sizeof(roverControll));
 
     // run the processes for components
     runComponentExecutable(""); // TODO replace with stuff
@@ -113,8 +104,8 @@ int main() {
 
     // create server for phone
     // maybe add script to create network
-    phoneInput = createNetworkConnection("", PHONE_INPUT_PORT, true, true, sizeof(roverParameters));
-    phoneOutput = createNetworkConnection("", PHONE_OUTPUT_PORT, false, true, sizeof(roverData));
+    phoneInput = createNetworkConnection(PHONE_IP, PHONE_INPUT_PORT, true, true, sizeof(roverParameters));
+    phoneOutput = createNetworkConnection(PHONE_IP, PHONE_OUTPUT_PORT, false, true, sizeof(roverData));
 
     // wait for phone to connect to rover
     wait_while_not (isConnected(phoneInput) and isConnected(phoneOutput))

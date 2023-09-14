@@ -1,6 +1,0 @@
-#ifndef ULTRASONIC_SENSOR_H
-#define ULTRASONIC_SENSOR_H
-
-#define ULTRASONIC_SENSOR_SOCKET_PATH "/tmp/ultrasonicsensor"
-
-#endif // ULTRASONIC_SENSOR_H
