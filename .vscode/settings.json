@@ -55,6 +55,7 @@
         "rover.h": "c",
         "bcm2835.h": "c",
         "connection.h": "c",
-        "macros.h": "c"
+        "macros.h": "c",
+        "datatypes.h": "c"
     }
 }

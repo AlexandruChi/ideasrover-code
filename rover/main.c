@@ -1,52 +1,9 @@
-// TODO header file with the component path and ports
-
 #include <unistd.h>
 
 #include "../macros.h"
 #include "../connection/connection.h"
 #include "../sockets.h"
-
-// TODO make better data types
-
-struct objectData {
-    // insert something here or replace struct
-};
-
-struct laneData {
-    // insert something here or replace struct
-};
-
-struct batteryData {
-    unsigned char batteryProcent;
-    bool charging;
-};
-
-enum ESCModes {R = -1, N = 0, D = 1, B = 2};
-
-struct ESCData {
-    double speed;
-    enum ESCModes mode;
-};
-
-struct selfDrivingData {
-    bool running; // replace with something better
-    // insert something here
-};
-
-struct roverControll {
-    struct ESCData esc;
-    double steer;
-};
-
-struct roverData {
-    // data to display on phone
-};
-
-struct roverParameters {
-    bool debug;
-    bool running;
-    bool test;
-};
+#include "../datatypes.h"
 
 void runComponentExecutable(char* path);
 
@@ -59,38 +16,39 @@ int main() {
     // input-output devices
     Connection phoneInput, phoneOutput, selfDrvingInput, selfDrivingOutput;
 
-    double distance;
-    struct objectData objectData;
-    struct laneData laneData;
-    struct batteryData batteryData;
+    Distance distance;
+    ObjectData objectData;
+    LaneData laneData;
+    BatteryData batteryData;
 
-    struct ESCData ESCData;
-    double steer;
+    ESCMode ESCData;
+    Steer steer;
 
-    struct selfDrivingData selfDrivingData;
-    struct roverControll roverControll;
+    SelfDrivingData selfDrivingData;
+    RoverControll roverControll;
 
-    struct roverParameters roverParameters;
-    struct roverData roverData;
+    RoverParameters roverParameters;
+    RoverData roverData;
 
     // TODO clean tmp files
 
     // creating server for input devices
-    ultrasonicSensor = createLocalConnection(ULTRASONIC_SENSOR_SOCKET_PATH, true, true, sizeof(distance));
-    objectDetectionCamera = createLocalConnection(OBJECT_DETECTION_CAMERA_PATH, true, true, sizeof(objectData));
-    PixyCamera = createLocalConnection(PIXY_CAMERA_PATH, true, true, sizeof(laneData));
-    batteryManagementSystem = createLocalConnection(BATTERY_MANAGEMENT_SYSTEM_PATH, true, true, sizeof(batteryData));
+    ultrasonicSensor = createLocalConnection(ULTRASONIC_SENSOR_SOCKET_PATH, true, true, sizeof(Distance));
+    objectDetectionCamera = createLocalConnection(OBJECT_DETECTION_CAMERA_PATH, true, true, sizeof(ObjectData));
+    PixyCamera = createLocalConnection(PIXY_CAMERA_PATH, true, true, sizeof(LaneData));
+    batteryManagementSystem = createLocalConnection(BATTERY_MANAGEMENT_SYSTEM_PATH, true, true, sizeof(BatteryData));
 
     // creating server for output devices
-    ESC = createLocalConnection(ESC_PATH, false, true, sizeof(ESCData));
-    servo = createLocalConnection(SERVO_PATH, false, true, sizeof(steer));
+    ESC = createLocalConnection(ESC_PATH, false, true, sizeof(ESCMode));
+    servo = createLocalConnection(SERVO_PATH, false, true, sizeof(Steer));
 
     // create server for the input-output devices
-    selfDrvingInput = createLocalConnection(SELF_DRIVING_INPUT_PATH, true, true, sizeof(selfDrivingData));
-    selfDrivingOutput = createLocalConnection(SELF_DRIVING_OUTPUT_PATH, false, true, sizeof(roverControll));
+    selfDrvingInput = createLocalConnection(SELF_DRIVING_INPUT_PATH, true, true, sizeof(SelfDrivingData));
+    selfDrivingOutput = createLocalConnection(SELF_DRIVING_OUTPUT_PATH, false, true, sizeof(RoverControll));
 
     // run the processes for components
-    runComponentExecutable(""); // TODO replace with stuff
+    //runComponentExecutable(pathToExecutable);
+    //system(consoleCommand);
 
     // wait for local sockets to create
     wait_while_not (
@@ -106,8 +64,8 @@ int main() {
 
     // create server for phone
     // maybe add script to create network
-    phoneInput = createNetworkConnection(PHONE_IP, PHONE_INPUT_PORT, true, true, sizeof(roverParameters));
-    phoneOutput = createNetworkConnection(PHONE_IP, PHONE_OUTPUT_PORT, false, true, sizeof(roverData));
+    phoneInput = createNetworkConnection(PHONE_IP, PHONE_INPUT_PORT, true, true, sizeof(RoverParameters));
+    phoneOutput = createNetworkConnection(PHONE_IP, PHONE_OUTPUT_PORT, false, true, sizeof(RoverData));
 
     // wait for phone to connect to rover
     wait_while_not (isConnected(phoneInput) and isConnected(phoneOutput))

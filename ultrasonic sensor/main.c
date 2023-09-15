@@ -2,13 +2,13 @@
 #include "../connection/connection.h"
 #include "../sockets.h"
 #include "../pins.h"
+#include "../datatypes.h"
 
 int main() {
-    double distance = 0;
-
     wait_while_not (bcm2835_init())
 
-    Connection connection = createLocalConnection(ULTRASONIC_SENSOR_SOCKET_PATH, false, false, sizeof(double));
+    Distance distance = 0;
+    Connection connection = createLocalConnection(ULTRASONIC_SENSOR_SOCKET_PATH, false, false, sizeof(Distance));
 
     bcm2835_gpio_fsel(ULTRASONIC_SENSOR_TRIGGER_PIN, BCM2835_GPIO_FSEL_OUTP);
     bcm2835_gpio_write(ULTRASONIC_SENSOR_TRIGGER_PIN, LOW);
