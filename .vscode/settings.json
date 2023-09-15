@@ -52,6 +52,9 @@
         "variant": "cpp",
         "vector": "cpp",
         "algorithm": "cpp",
-        "rover.h": "c"
+        "rover.h": "c",
+        "bcm2835.h": "c",
+        "connection.h": "c",
+        "macros.h": "c"
     }
 }

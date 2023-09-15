@@ -2,7 +2,9 @@
 
 #include <unistd.h>
 
-#include "../rover.h"
+#include "../macros.h"
+#include "../connection/connection.h"
+#include "../sockets.h"
 
 // TODO make better data types
 

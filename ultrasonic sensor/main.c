@@ -1,9 +1,7 @@
-#include <bcm2835.h>
-
-#include "../rover.h"
-
-#define ULTRASONIC_SENSOR_TRIGGER_DELAY_US 10
-#define SPEED_OF_SOUND_M_US 0.343
+#include "../macros.h"
+#include "../connection/connection.h"
+#include "../sockets.h"
+#include "../pins.h"
 
 int main() {
     double distance = 0;
@@ -18,7 +16,7 @@ int main() {
 
     loop {
         bcm2835_gpio_write(ULTRASONIC_SENSOR_TRIGGER_PIN, HIGH);
-        bcm2835_delayMicroseconds(ULTRASONIC_SENSOR_TRIGGER_DELAY_US);
+        bcm2835_delayMicroseconds(TRIGGER_PIN_DELAY_US);
         bcm2835_gpio_write(ULTRASONIC_SENSOR_TRIGGER_PIN, LOW);
         wait_while_not (bcm2835_gpio_lev(ULTRASONIC_SENSOR_ECHO_PIN))
         uint32_t startTimer = bcm2835_st_read();
